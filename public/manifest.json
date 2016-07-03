@@ -1,0 +1,26 @@
+{
+  "manifest_version": 2,
+  "icons": {
+    "32": "icons/musical-32.png"
+  },
+  "name": "Soundkick",
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "m1@tommmo.com"
+    }
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "permissions": [
+    "webRequest",
+    "tabs",
+    "cookies",
+    "storage"
+  ],
+  "browser_action": {
+    "default_icon": "icons/musical-32.png",
+    "default_title": "Soundkick"
+  }
+}

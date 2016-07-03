@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "icons": {
-    "32": "icons/musical-32.png"
+    "32": "musical-32.png"
   },
   "name": "Soundkick",
   "version": "1.0",
@@ -13,14 +13,21 @@
   "background": {
     "scripts": ["background.js"]
   },
+  "content_scripts": [
+        {
+          "matches": ["http://*.soundcloud.com/*", "https://*.soundcloud.com/*"],
+          "js": ["soundcloud.js"]
+        }
+  ],
   "permissions": [
     "webRequest",
     "tabs",
     "cookies",
-    "storage"
+    "storage",
+    "notifications"
   ],
   "browser_action": {
-    "default_icon": "icons/musical-32.png",
+    "default_icon": "musical-32.png",
     "default_title": "Soundkick"
   }
 }

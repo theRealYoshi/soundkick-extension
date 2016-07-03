@@ -3,7 +3,7 @@
 var gulp = require('gulp');
 var zip = require('gulp-zip');
 
-var files = ['./public/*'];
+var files = ['./public/*', './public/icons/*', './public/scripts/*'];
 var xpiName = 'test.xpi';
 
 gulp.task('default', function () {

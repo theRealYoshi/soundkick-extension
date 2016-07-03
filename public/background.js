@@ -1,5 +1,4 @@
 // ***** USE BROWSER CONSOLE TO CHECK ALL LOGS (CTRL + SHIFT + J) *******
-
 'use strict';
 
 /*global chrome:false */
@@ -30,27 +29,10 @@ function checkSoundcloudOpen(){
       }
     }
   })
-  chrome.cookies.get({
-    url: "https://soundkick-server.herokuapp.com/",
-    name: "__utma"
-  }, function(cookie){
-    console.log(cookie);
-  })
-  chrome.cookies.get({
-    url: "https://soundkick-server.herokuapp.com/",
-    name: "__utmz"
-  }, function(cookie){
-    console.log(cookie);
-  })
 }
 
 // check to see whenever a new tab is opened. Check for soundcloud
 // or if the page requested to was soundcloud
-if(!soundcloudOpen){
-  chrome.tabs.onUpdated.addListener(checkSoundcloudOpen);
-} else {
-  chrome.tabs.onUpdated.removeListener(checkSoundcloudOpen);
-}
 
 chrome.browserAction.setPopup({ popup: "https://soundkick-server.herokuapp.com/"});
 
@@ -66,3 +48,15 @@ chrome.browserAction.onClicked.addListener(function(aTab) {
 chrome.cookies.getAllCookieStores(function(cookieStores){
   console.log(cookieStores);
 })
+
+
+chrome.runtime.onMessage.addListener(notify);
+
+function notify(message) {
+  chrome.notifications.create({
+    "type": "basic",
+    "iconUrl": chrome.extension.getURL("musical-64.png"),
+    "title": "You went to Soundcloud!",
+    "message": message.content
+  });
+}

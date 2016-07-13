@@ -23,6 +23,9 @@
     "webRequest",
     "tabs",
     "cookies",
+    "https://*.soundcloud.com/","http://*.soundcloud.com/",
+    "http://*.soundkick-server.herokuapp.com/",
+    "https://*.soundkick-server.herokuapp.com/",
     "storage",
     "notifications"
   ],

@@ -5,7 +5,7 @@
 console.log("[background.js] : setting popup view");
 chrome.browserAction.setPopup({ popup: "https://soundkick-server.herokuapp.com/"});
 chrome.storage.local.set({
-  soundkickAccess: false,
+  soundkickAccess: "",
   soundcloudTabActivated: false
 })
 // do a storage change listener or sync
@@ -16,7 +16,9 @@ function checkSoundkickAccess(){
   // also set chrome.storage.local to true that you have access
   chrome.storage.local.set({
     soundcloudTabActivated: true
+    // upon out of focus set to false;
   });
+  console.log("[background.js] checkSoundkickAccess: getAllCookieStores");
   getAllCookieStores();
   // else ask user to signin to soundkick access
   // chrome.browserAction.openPopup(function(popupView){
@@ -24,7 +26,6 @@ function checkSoundkickAccess(){
   // });
   console.log("[background.js] checkSoundkickAccess: setting badge");
   chrome.browserAction.setBadgeText({text: '1'});
-  // chrome.webRequest.
 }
 
 function removeBadge(){
@@ -33,9 +34,33 @@ function removeBadge(){
   chrome.browserAction.setBadgeText({text: ''});
 }
 
+// This is the page for which we want to rewrite
+// the User-Agent header.
+var targetPages = ["http://*.soundcloud.com/*", "https://*.soundcloud.com/*"] ;
+
+function rewriteUserAgentHeader(e){
+  console.log("[background.js] rewriteUserAgentHeader");
+  console.log(e);
+  var reqHeaders = e.requestHeaders;
+  for (var i = 0; i < reqHeaders.length; i++){
+    if (reqHeaders[i].name === "Cookie"){
+      console.log("Cookie Value:");
+      console.log(reqHeaders[i].value);
+    } else if (reqHeaders[i].name === "Authorization"){
+      console.log("Authorization Value:");
+      console.log(reqHeaders[i].value);
+    }
+  }
+}
+
 chrome.browserAction.onClicked.addListener(removeBadge);
 chrome.runtime.onMessage.addListener(dispatch);
 chrome.storage.onChanged.addListener(logStorageChange);
+chrome.webRequest.onBeforeSendHeaders.addListener(
+    rewriteUserAgentHeader,
+    {urls: targetPages},
+    ["blocking", "requestHeaders"]
+);
 
 // sends message to content_scripts soundcloud.js which notifies the token has been activated
 // get tab id
@@ -49,7 +74,7 @@ function dispatch(message){
       break;
     case "notificationActivated":
       console.log("[background.js] dispatch: notificationActivated");
-      notify(message.content);
+      // notify(message.content);
       break;
     default:
       console.log("[background.js] dispatch: nothing happened in dispatch");
@@ -73,20 +98,27 @@ function logStorageChange(changes, area) {
   console.log("[background.js] logStorageChange: Change in storage area: ");
   console.log(area);
   console.log(changes);
-  // var changedItems = Object.keys(changes);
-  // for (item of changedItems) {
-  //   console.log("[background.js] logStorageChange: ");
-  //   console.log(item + " has changed:");
-  //   console.log("[background.js] logStorageChange: Old value: ");
-  //   console.log(changes[item].oldValue);
-  //   console.log("[background.js] logStorageChange: New value: ");
-  //   console.log(changes[item].newValue);
-  // }
+  for (var i = 0; i < changes.length; i++) {
+    console.log("[background.js] logStorageChange: ");
+    console.log(changes[i] + " has changed:");
+    console.log("[background.js] logStorageChange: Old value: ");
+    console.log(changes[i].oldValue);
+    console.log("[background.js] logStorageChange: New value: ");
+    console.log(changes[i].newValue);
+  }
 }
 
 function getAllCookieStores(){
-  chrome.cookies.getAll({url: "https://*.soundkick-server.herokuapp.com/*", name:"connect.sid"}, function(cookies){
-    console.log("[background.js] getAllCookieStores: ");
+  // chrome.cookies.getAll({url: "https://*.soundkick-server.herokuapp.com/*", name:"connect.sid"}, function(cookies){
+  console.log("[background.js] getAllCookieStores: ");
+  chrome.cookies.getAll({ domain: "soundkick-server.herokuapp.com", name: "soundkick-server"}, function(cookies){
     console.log(cookies);
+    for (var i = 0; i < cookies.length; i++){
+      console.log("[background.js] cookie value: ")
+      console.log(cookies[i].value);
+      chrome.storage.local.set({
+        soundkickAccess: cookies[i].value
+      });
+    }
   });
 }

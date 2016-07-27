@@ -21,6 +21,7 @@
   ],
   "permissions": [
     "webRequest",
+    "webRequestBlocking",
     "tabs",
     "cookies",
     "https://*.soundcloud.com/","http://*.soundcloud.com/",

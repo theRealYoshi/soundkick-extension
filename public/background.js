@@ -1,14 +1,89 @@
 // ***** USE BROWSER CONSOLE TO CHECK ALL LOGS (CTRL + SHIFT + J) *******
 'use strict';
-
 /*global chrome:false */
+
+var targetPages = ["http://*.soundcloud.com/*", "https://*.soundcloud.com/*"] ;
+
+function rewriteUserAgentHeader(e){
+  console.log("[background.js] rewriteUserAgentHeader");
+  console.log(e);
+  var reqHeaders = e.requestHeaders;
+  for (var i = 0; i < reqHeaders.length; i++){
+    if (reqHeaders[i].name === "Cookie"){
+      console.log("Cookie Value:");
+      console.log(reqHeaders[i].value);
+    } else if (reqHeaders[i].name === "Authorization"){
+      console.log("Authorization Value:");
+      console.log(reqHeaders[i].value);
+      var soundcloudAuthToken = reqHeaders[i].value.replace(/OAuth/i, "").trim();
+      console.log("Soundcloud OAuth token set");
+      console.log(soundcloudAuthToken);
+      chrome.storage.local.set({
+        soundcloudAuthToken: soundcloudAuthToken
+      });
+    }
+  }
+}
+
 console.log("[background.js] : setting popup view");
 chrome.browserAction.setPopup({ popup: "https://soundkick-server.herokuapp.com/"});
+chrome.storage.onChanged.addListener(logStorageChange);
+console.log("[background.js] : setting localstorage");
 chrome.storage.local.set({
   soundkickAccess: "",
-  soundcloudTabActivated: false
-})
+  soundcloudAuthToken: "",
+  soundcloudTabActivated: false,
+  soundcloudOauthChecked: false
+});
+chrome.browserAction.onClicked.addListener(removeBadge);
+chrome.runtime.onMessage.addListener(dispatch);
+chrome.webRequest.onBeforeSendHeaders.addListener(
+    rewriteUserAgentHeader,
+    {
+      urls: targetPages
+    },
+    ["blocking", "requestHeaders"]
+);
+console.log("[background.js] checkSoundcloudOauth: setting to local storage true");
+chrome.storage.local.set({
+  soundcloudOauthChecked: true
+});
 // do a storage change listener or sync
+
+function dispatch(message){
+  console.log("[background.js] dispatch: " + message);
+  switch(message.type){
+    case "tabActivated":
+      checkSoundkickAccess();
+      console.log("[background.js] dispatch: tabActivated");
+      break;
+    case "notificationActivated":
+      console.log("[background.js] dispatch: notificationActivated");
+      // notify(message.content);
+      break;
+    case "checkSoundcloudOauth":
+      console.log("[background.js] dispatch: checkSoundcloudOauth");
+      checkSoundcloudOauth();
+      break;
+    default:
+      console.log("[background.js] dispatch: nothing happened in dispatch");
+  }
+}
+
+function checkSoundcloudOauth(){
+  console.log("[background.js] checkSoundcloudOauth:");
+  chrome.storage.local.get("soundcloudOauthChecked", function(access){
+    console.log("[background.js] getting storage access:");
+    console.log(access.soundcloudOauthChecked);
+    if(!access.soundcloudOauthChecked){
+      console.log("[background.js] checkSoundcloudOauth: adding listener to webRequest");
+      // need to check again
+    } else {
+      console.log("[background.js] checkSoundcloudOauth: removing listener");
+    }
+  });
+}
+
 
 function checkSoundkickAccess(){
   console.log('[background.js] checkSoundkickAccess: Soundkick Access accessed');
@@ -16,10 +91,9 @@ function checkSoundkickAccess(){
   // also set chrome.storage.local to true that you have access
   chrome.storage.local.set({
     soundcloudTabActivated: true
-    // upon out of focus set to false;
   });
   console.log("[background.js] checkSoundkickAccess: getAllCookieStores");
-  getAllCookieStores();
+  // getAllCookieStores();
   // else ask user to signin to soundkick access
   // chrome.browserAction.openPopup(function(popupView){
   //   console.log("[background.js] checkSoundkickAccess: " + popupView);
@@ -34,52 +108,8 @@ function removeBadge(){
   chrome.browserAction.setBadgeText({text: ''});
 }
 
-// This is the page for which we want to rewrite
-// the User-Agent header.
-var targetPages = ["http://*.soundcloud.com/*", "https://*.soundcloud.com/*"] ;
-
-function rewriteUserAgentHeader(e){
-  console.log("[background.js] rewriteUserAgentHeader");
-  console.log(e);
-  var reqHeaders = e.requestHeaders;
-  for (var i = 0; i < reqHeaders.length; i++){
-    if (reqHeaders[i].name === "Cookie"){
-      console.log("Cookie Value:");
-      console.log(reqHeaders[i].value);
-    } else if (reqHeaders[i].name === "Authorization"){
-      console.log("Authorization Value:");
-      console.log(reqHeaders[i].value);
-    }
-  }
-}
-
-chrome.browserAction.onClicked.addListener(removeBadge);
-chrome.runtime.onMessage.addListener(dispatch);
-chrome.storage.onChanged.addListener(logStorageChange);
-chrome.webRequest.onBeforeSendHeaders.addListener(
-    rewriteUserAgentHeader,
-    {urls: targetPages},
-    ["blocking", "requestHeaders"]
-);
-
 // sends message to content_scripts soundcloud.js which notifies the token has been activated
 // get tab id
-
-function dispatch(message){
-  console.log("[background.js] dispatch: " + message);
-  switch(message.type){
-    case "tabActivated":
-      checkSoundkickAccess();
-      console.log("[background.js] dispatch: tabActivated");
-      break;
-    case "notificationActivated":
-      console.log("[background.js] dispatch: notificationActivated");
-      // notify(message.content);
-      break;
-    default:
-      console.log("[background.js] dispatch: nothing happened in dispatch");
-  }
-}
 
 function notify(messageContent) {
   console.log("[background.js] notify: notification created");

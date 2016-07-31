@@ -4,17 +4,19 @@ console.log('Soundcloud content script is running...');
 window.addEventListener("focus", function(){
   // receives message saying that this person has already activated the tab or base if off of session data.
   var firstTimeTabActivated = false;
-  console.log("[soundcloud.js] addEventListener: " + firstTimeTabActivated);
-  if(!firstTimeTabActivated){
-    notifyExtension("tabActivated", "You're at Soundcloud!");
-  } else {
-    notifyExtension("notificationActivated", "This is your 2nd time at the Soundcloud tab!");
-  }
+  // console.log("[soundcloud.js] addEventListener: " + firstTimeTabActivated);
+  // if(!firstTimeTabActivated){
+  //   sendMessage("tabActivated", "You're at Soundcloud!");
+  // } else {
+  //   sendMessage("notificationActivated", "This is your 2nd time at the Soundcloud tab!");
+  // }
+  console.log("[soundcloud.js] addEventListener:");
+  sendMessage("checkSoundcloudOauth", "checking soundcloud oauth access");
 });
 
 
-function notifyExtension(messageType, messageContent) {
-  console.log("[soundcloud.js] notifyExtension: " + messageContent);
+function sendMessage(messageType, messageContent) {
+  console.log("[soundcloud.js] sendMessage: " + messageContent);
   chrome.runtime.sendMessage({
     type: messageType,
     content: messageContent

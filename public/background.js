@@ -94,7 +94,7 @@ function checkSoundkickAccess(){
   });
   console.log("[background.js] checkSoundkickAccess: getAllCookieStores");
   // getAllCookieStores();
-  // else ask user to signin to soundkick access
+  // else ask usery to signin to soundkick access
   // chrome.browserAction.openPopup(function(popupView){
   //   console.log("[background.js] checkSoundkickAccess: " + popupView);
   // });

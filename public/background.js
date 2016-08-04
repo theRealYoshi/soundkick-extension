@@ -3,6 +3,7 @@
 /*global chrome:false */
 
 var targetPages = ["http://*.soundcloud.com/*", "https://*.soundcloud.com/*"] ;
+var Request = require("sdk/request").Request;
 
 function rewriteUserAgentHeader(e){
   console.log("[background.js] rewriteUserAgentHeader");
@@ -19,11 +20,21 @@ function rewriteUserAgentHeader(e){
       console.log("Soundcloud OAuth token set");
       console.log(soundcloudAuthToken);
       chrome.storage.local.set({
-        soundcloudAuthToken: soundcloudAuthToken
+        soundcloudAuthToken: soundcloudAuthToken,
+        soundcloudOauthChecked: true
       });
     }
   }
 }
+
+
+//Once authentication token is available pass as setPopup for authentication with access token and pass authentication token as params
+
+// Then load list of upcoming artists in your area using songkick api and zip code Can add to database as well!
+
+// If there is no access token set popup as soundkick server with redirect to login page so logged in
+// Set popup in soundcloud so user will login and will allow to rewrite user agent header to grab authentication token
+// Or login through app.
 
 console.log("[background.js] : setting popup view");
 chrome.browserAction.setPopup({ popup: "https://soundkick-server.herokuapp.com/"});
@@ -37,18 +48,7 @@ chrome.storage.local.set({
 });
 chrome.browserAction.onClicked.addListener(removeBadge);
 chrome.runtime.onMessage.addListener(dispatch);
-chrome.webRequest.onBeforeSendHeaders.addListener(
-    rewriteUserAgentHeader,
-    {
-      urls: targetPages
-    },
-    ["blocking", "requestHeaders"]
-);
-console.log("[background.js] checkSoundcloudOauth: setting to local storage true");
-chrome.storage.local.set({
-  soundcloudOauthChecked: true
-});
-// do a storage change listener or sync
+
 
 function dispatch(message){
   console.log("[background.js] dispatch: " + message);
@@ -77,9 +77,13 @@ function checkSoundcloudOauth(){
     console.log(access.soundcloudOauthChecked);
     if(!access.soundcloudOauthChecked){
       console.log("[background.js] checkSoundcloudOauth: adding listener to webRequest");
-      // need to check again
-    } else {
-      console.log("[background.js] checkSoundcloudOauth: removing listener");
+      chrome.webRequest.onBeforeSendHeaders.addListener(
+          rewriteUserAgentHeader,
+          {
+            urls: targetPages
+          },
+          ["blocking", "requestHeaders"]
+      );
     }
   });
 }
@@ -89,9 +93,6 @@ function checkSoundkickAccess(){
   console.log('[background.js] checkSoundkickAccess: Soundkick Access accessed');
   // if session token in soundkick have access then check for upcoming concerts
   // also set chrome.storage.local to true that you have access
-  chrome.storage.local.set({
-    soundcloudTabActivated: true
-  });
   console.log("[background.js] checkSoundkickAccess: getAllCookieStores");
   // getAllCookieStores();
   // else ask usery to signin to soundkick access

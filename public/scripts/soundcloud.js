@@ -1,9 +1,19 @@
 console.log('Soundcloud content script is running...');
+var storageStuff;
+
+function gotItem(item) {
+  if (chrome.runtime.lastError) {
+    console.log(chrome.runtime.lastError);
+  } else {
+    console.log(item);
+    storageStuff = item;
+  }
+}
 
 // check only first time in session, keep localstorage as false initially when browser is opened.
 window.addEventListener("focus", function(){
   // receives message saying that this person has already activated the tab or base if off of session data.
-  var firstTimeTabActivated = false;
+  console.log("[soundcloud.js] addEventListener: Storage Items");
   // console.log("[soundcloud.js] addEventListener: " + firstTimeTabActivated);
   // if(!firstTimeTabActivated){
   //   sendMessage("tabActivated", "You're at Soundcloud!");
